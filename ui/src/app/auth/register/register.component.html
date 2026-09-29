@@ -1,0 +1,112 @@
+<app-auth-layout heading="Create account" subheading="Track every treadmill run.">
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (error()) {
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
+    }
+
+    <div class="field">
+      <label class="field-label" for="register-username">Username</label>
+      <input
+        id="register-username"
+        class="input"
+        type="text"
+        formControlName="username"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        [attr.aria-invalid]="hasError('username')"
+        aria-describedby="register-username-error"
+        (input)="clearServerError('username')"
+      />
+      @if (hasError('username')) {
+        <span id="register-username-error" class="field-error">
+          @if (serverError('username'); as message) {
+            {{ message }}
+          } @else if (form.controls.username.hasError('required')) {
+            Choose a username.
+          } @else if (form.controls.username.hasError('maxlength')) {
+            Up to 150 characters.
+          } @else {
+            Letters, numbers, and @ . + - _ only
+          }
+        </span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="register-email">Email</label>
+      <input
+        id="register-email"
+        class="input"
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        placeholder="you@example.com"
+        [attr.aria-invalid]="hasError('email')"
+        aria-describedby="register-email-error"
+        (input)="clearServerError('email')"
+      />
+      @if (hasError('email')) {
+        <span id="register-email-error" class="field-error">
+          @if (serverError('email'); as message) {
+            {{ message }}
+          } @else if (form.controls.email.hasError('required')) {
+            Enter an email.
+          } @else {
+            Enter a valid email.
+          }
+        </span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="register-password">Password</label>
+      <div class="input-group">
+        <input
+          id="register-password"
+          class="input"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="new-password"
+          [attr.aria-invalid]="hasError('password')"
+          aria-describedby="register-password-hint register-password-error"
+          (input)="clearServerError('password')"
+        />
+        <button
+          type="button"
+          class="input-affix"
+          [attr.aria-pressed]="showPassword()"
+          (click)="showPassword.set(!showPassword())"
+        >
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (hasError('password')) {
+        <span id="register-password-error" class="field-error">
+          @if (serverError('password'); as message) {
+            {{ message }}
+          } @else if (form.controls.password.hasError('required')) {
+            Choose a password.
+          } @else {
+            At least 8 characters.
+          }
+        </span>
+      } @else {
+        <span id="register-password-hint" class="field-hint">
+          At least 8 characters. Not a common password, and not just numbers.
+        </span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
+      @if (loading()) {
+        <span class="spinner" aria-hidden="true"></span>
+        Creating account…
+      } @else {
+        Create account
+      }
+    </button>
+  </form>
+
+  <span authFooter>Already have an account? <a routerLink="/login">Log in</a></span>
+</app-auth-layout>

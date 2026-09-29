@@ -1,0 +1,62 @@
+<app-auth-layout heading="Welcome back" subheading="Log in to your RunPulse account.">
+  <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    @if (error()) {
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
+    }
+
+    <div class="field">
+      <label class="field-label" for="login-username">Username</label>
+      <input
+        id="login-username"
+        class="input"
+        type="text"
+        formControlName="username"
+        autocomplete="username"
+        autocapitalize="none"
+        spellcheck="false"
+        [attr.aria-invalid]="hasError('username')"
+        aria-describedby="login-username-error"
+      />
+      @if (hasError('username')) {
+        <span id="login-username-error" class="field-error">Enter a username.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="login-password">Password</label>
+      <div class="input-group">
+        <input
+          id="login-password"
+          class="input"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="hasError('password')"
+          aria-describedby="login-password-error"
+        />
+        <button
+          type="button"
+          class="input-affix"
+          [attr.aria-pressed]="showPassword()"
+          (click)="showPassword.set(!showPassword())"
+        >
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (hasError('password')) {
+        <span id="login-password-error" class="field-error">Enter a password.</span>
+      }
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block" [disabled]="loading()">
+      @if (loading()) {
+        <span class="spinner" aria-hidden="true"></span>
+        Logging in…
+      } @else {
+        Log in
+      }
+    </button>
+  </form>
+
+  <span authFooter>Don't have an account yet? <a routerLink="/register">Sign up</a></span>
+</app-auth-layout>

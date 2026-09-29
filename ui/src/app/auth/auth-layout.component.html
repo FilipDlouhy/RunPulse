@@ -1,0 +1,48 @@
+<aside class="brand">
+  <app-logo />
+
+  <div class="pitch">
+    <h2>Every treadmill run, broken down in detail.</h2>
+    <p>During the run, see your heart rate, pace, and zones live; after finishing, get a full analysis.</p>
+
+    <ul class="features">
+      <li>Live heart rate, pace, and distance</li>
+      <li>Split times, HR zones, and personal records</li>
+    </ul>
+  </div>
+
+  <svg class="pulse" viewBox="0 0 600 80" preserveAspectRatio="none" aria-hidden="true">
+    <path
+      d="M0,50
+         h20 q10,-8 20,0 h10 l4,3 l6,-41 l6,54 l5,-16 h14 q15,-14 30,0 h35
+         h20 q10,-8 20,0 h10 l4,3 l6,-41 l6,54 l5,-16 h14 q15,-14 30,0 h35
+         h20 q10,-8 20,0 h10 l4,3 l6,-41 l6,54 l5,-16 h14 q15,-14 30,0 h35
+         h20 q10,-8 20,0 h10 l4,3 l6,-41 l6,54 l5,-16 h14 q15,-14 30,0 h35"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      vector-effect="non-scaling-stroke"
+    />
+  </svg>
+</aside>
+
+<main class="panel">
+  <div class="card">
+    <app-logo class="mobile-logo" />
+
+    <header class="card-header">
+      <h1>{{ heading() }}</h1>
+      @if (subheading()) {
+        <p class="text-muted">{{ subheading() }}</p>
+      }
+    </header>
+
+    <ng-content />
+
+    <footer class="card-footer text-muted">
+      <ng-content select="[authFooter]" />
+    </footer>
+  </div>
+</main>

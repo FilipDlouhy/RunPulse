@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div class="brand">
+    <app-logo />
+    <nav class="nav" aria-label="Main">
+      @for (link of links(); track link.path) {
+        <a [routerLink]="link.path" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: link.exact }">
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+  </div>
+
+  <div class="account">
+    @if (auth.currentUser(); as user) {
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+      <span class="account-name">
+        <strong>{{ user.username }}</strong>
+        <span class="text-muted">{{ user.email }}</span>
+      </span>
+    }
+    <button type="button" class="btn btn-secondary btn-sm" (click)="signOut()">Log out</button>
+  </div>
+</header>
+
+<main class="content">
+  <router-outlet />
+</main>
