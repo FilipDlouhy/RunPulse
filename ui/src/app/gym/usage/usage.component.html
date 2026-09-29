@@ -1,0 +1,38 @@
+<header class="page-header">
+  <div>
+    <h1>Usage</h1>
+    <p class="text-muted">Average number of running treadmills by day and hour.</p>
+  </div>
+  <div class="week-select">
+    @for (option of weekOptions; track option.weeks) {
+      <button
+        type="button"
+        [class]="'btn btn-sm ' + (weeks() === option.weeks ? 'btn-primary' : 'btn-secondary')"
+        (click)="selectWeeks(option.weeks)"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+</header>
+
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else {
+  <div class="card">
+    <div class="heatmap">
+      <span class="corner"></span>
+      @for (hour of hours; track hour) {
+        <span class="hour-label">{{ hour }}</span>
+      }
+      @for (day of days; track day; let i = $index) {
+        <span class="day-label">{{ day }}</span>
+        @for (value of row(i); track $index) {
+          <span class="cell" [style.opacity]="intensity(value)" [title]="value.toFixed(1) + ' treadmills'"></span>
+        }
+      }
+    </div>
+  </div>
+}

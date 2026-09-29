@@ -1,0 +1,161 @@
+<header class="page-header">
+  <div>
+    <h1>Technical status</h1>
+    <p class="text-muted">Queue, pipelines, and error messages (updates every 5 s).</p>
+  </div>
+</header>
+
+@if (data(); as tech) {
+  <div class="stats">
+    @if (tech.queue; as queue) {
+      <div class="stat">
+        <span class="stat-label">Messages in queue</span>
+        <span class="stat-value">{{ queue.messages }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Published/s</span>
+        <span class="stat-value">{{ queue.publish_rate | number: '1.1-1' }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Delivered/s</span>
+        <span class="stat-value">{{ queue.deliver_rate | number: '1.1-1' }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Consumers</span>
+        <span class="stat-value">{{ queue.consumers }}</span>
+      </div>
+    } @else {
+      <div class="stat">
+        <span class="stat-label">Queue</span>
+        <span class="stat-value">{{ tech.queue_error ?? 'Unavailable' }}</span>
+      </div>
+    }
+    <div class="stat">
+      <span class="stat-label">Pipelines in 24 h</span>
+      <span class="stat-value">{{ tech.pipeline_count }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Failed</span>
+      <span class="stat-value">{{ tech.pipeline_failed }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Average duration</span>
+      <span class="stat-value">
+        {{ tech.pipeline_avg_ms ? (tech.pipeline_avg_ms | number: '1.0-0') + ' ms' : '–' }}
+      </span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Dead letters</span>
+      <span class="stat-value">{{ tech.dead_letter_count }}</span>
+    </div>
+  </div>
+
+  @if (tech.slowest_steps.length) {
+    <section class="card">
+      <h2 class="card-title">Slowest steps</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th class="num">Avg</th>
+            <th class="num">Max</th>
+            <th class="num">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (step of tech.slowest_steps; track step.name) {
+            <tr>
+              <td>{{ step.name }}</td>
+              <td class="num">{{ step.avg_ms | number: '1.0-0' }} ms</td>
+              <td class="num">{{ step.max_ms | number: '1.0-0' }} ms</td>
+              <td class="num">{{ step.count }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+
+  <section class="card">
+    <h2 class="card-title">Recent pipelines</h2>
+    @if (tech.pipelines.length) {
+      <ul class="pipeline-list">
+        @for (run of tech.pipelines; track run.id) {
+          <li class="pipeline">
+            <button type="button" class="pipeline-header" (click)="toggle(run)">
+              <span>{{ run.name }} #{{ run.id }}</span>
+              <span class="text-muted">{{ run.status }}</span>
+              <span class="text-muted">{{ run.started_at | date: 'MMM d, HH:mm' }}</span>
+              <span class="text-muted">
+                {{ run.duration_ms ? (run.duration_ms | number: '1.0-0') + ' ms' : '–' }}
+              </span>
+            </button>
+            @if (expandedId() === run.id) {
+              <ol class="steps">
+                @for (step of run.steps; track step.order) {
+                  <li>
+                    <span>{{ step.order }}. {{ step.name }}</span>
+                    <span class="text-muted">{{ step.status }}</span>
+                    <span class="text-muted">
+                      {{ step.duration_ms ? (step.duration_ms | number: '1.0-0') + ' ms' : '–' }}
+                    </span>
+                    @if (step.error) {
+                      <span class="step-error">{{ step.error }}</span>
+                    }
+                  </li>
+                }
+              </ol>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-muted">No pipelines in the last 24 hours.</p>
+    }
+  </section>
+
+  <section class="card">
+    <h2 class="card-title">Dead letter queue</h2>
+    @if (tech.dead_letters.length) {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Routing key</th>
+              <th>Device</th>
+              <th>Error</th>
+              <th>Created</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of tech.dead_letters; track item.id) {
+              <tr>
+                <td>{{ item.routing_key }}</td>
+                <td>{{ item.device_serial }}</td>
+                <td class="wrap">{{ item.error }}</td>
+                <td>{{ item.created_at | date: 'MMM d, HH:mm' }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    [disabled]="retryingId() === item.id"
+                    (click)="retry(item)"
+                  >
+                    Retry
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <p class="text-muted">DLQ is empty.</p>
+    }
+  </section>
+} @else if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else {
+  <p class="text-muted">Loading…</p>
+}

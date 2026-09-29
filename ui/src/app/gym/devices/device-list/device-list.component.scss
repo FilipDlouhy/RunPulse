@@ -1,0 +1,17 @@
+td:has(button) {
+  width: 1%;
+  white-space: nowrap;
+}
+
+td:has(button) + td:has(button) {
+  padding-left: 0;
+}
+
+td.num .badge {
+  margin-left: var(--space-2);
+}
+
+td:first-child {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

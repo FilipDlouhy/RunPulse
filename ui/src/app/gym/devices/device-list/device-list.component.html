@@ -1,0 +1,66 @@
+<header class="page-header">
+  <div>
+    <h1>Machines</h1>
+    <p class="text-muted">{{ items().length }} {{ plural(items().length, 'treadmill', 'treadmills') }} · {{ needsServiceCount() }} {{ plural(needsServiceCount(), 'needs', 'need') }} service</p>
+  </div>
+</header>
+
+@if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else if (loading() && !items().length) {
+  <p class="text-muted">Loading machines…</p>
+} @else if (!items().length) {
+  <div class="table-wrap"><p class="empty">No treadmills.</p></div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Serial number</th>
+          <th>Status</th>
+          <th>Last seen</th>
+          <th class="num">Hours</th>
+          <th class="num">Since service</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (device of items(); track device.id) {
+          <tr>
+            <td>{{ device.serial }}</td>
+            <td><span [class]="statusBadge(device.status)">{{ statuses[device.status] }}</span></td>
+            <td>{{ device.last_seen ? (device.last_seen | date: 'MMM d, HH:mm') : '–' }}</td>
+            <td class="num">{{ device.total_hours | number: '1.0-0' }}</td>
+            <td class="num">
+              {{ device.hours_since_service | number: '1.0-0' }}
+              @if (device.needs_service) {
+                <span class="badge badge-warning">Service</span>
+              }
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                [disabled]="busyId() === device.id"
+                (click)="serviceDone(device)"
+              >
+                Service done
+              </button>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                [disabled]="busyId() === device.id || device.status === 'OUT_OF_ORDER'"
+                (click)="outOfOrder(device)"
+              >
+                Out of order
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

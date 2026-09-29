@@ -1,0 +1,62 @@
+.week-select {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--color-surface-sunken);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+
+  .btn {
+    height: 32px;
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-secondary {
+    color: var(--color-text-muted);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      color: var(--color-text);
+      background: var(--color-surface);
+      border-color: transparent;
+    }
+  }
+}
+
+.card {
+  overflow-x: auto;
+}
+
+.heatmap {
+  display: grid;
+  grid-template-columns: 36px repeat(24, minmax(14px, 1fr));
+  align-items: center;
+  gap: 4px;
+  min-width: 600px;
+}
+
+.corner {
+  height: 1px;
+}
+
+.hour-label {
+  padding-bottom: var(--space-1);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-subtle);
+  text-align: center;
+}
+
+.day-label {
+  font-size: var(--text-sm);
+  font-weight: 650;
+  color: var(--color-text-muted);
+}
+
+.cell {
+  background: var(--color-primary);
+  border-radius: 3px;
+  aspect-ratio: 1;
+}

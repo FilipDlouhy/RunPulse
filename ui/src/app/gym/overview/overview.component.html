@@ -1,0 +1,66 @@
+<header class="page-header">
+  <div>
+    <h1>Gym overview</h1>
+    <p class="text-muted">Treadmill usage and open safety alerts.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else if (data(); as overview) {
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-label">Total treadmills</span>
+      <span class="stat-value">{{ overview.treadmills_total }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">In use</span>
+      <span class="stat-value">{{ overview.treadmills_in_use }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Free</span>
+      <span class="stat-value">{{ overview.treadmills_free }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Out of order</span>
+      <span class="stat-value">{{ overview.treadmills_out_of_order }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Offline</span>
+      <span class="stat-value">{{ overview.treadmills_offline }}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Runs today</span>
+      <span class="stat-value">{{ overview.runs_today }}</span>
+    </div>
+  </div>
+
+  <section class="card alerts-card">
+    <h2 class="card-title">Open alerts</h2>
+    @if (overview.alerts.length) {
+      <ul class="alert-list">
+        @for (alert of overview.alerts; track alert.id) {
+          <li class="alert-row">
+            <div>
+              <span class="badge badge-danger">{{ alertTypes[alert.type] }}</span>
+              <p>{{ alert.message }}</p>
+              <span class="text-muted meta">{{ alert.device }} · {{ alert.created_at | date: 'MMM d, y, HH:mm' }}</span>
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              [disabled]="ackingId() === alert.id"
+              (click)="ack(alert)"
+            >
+              Acknowledge
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="text-muted">No open alerts.</p>
+    }
+  </section>
+}
