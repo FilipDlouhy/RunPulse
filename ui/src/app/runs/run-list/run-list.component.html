@@ -1,0 +1,50 @@
+<header class="page-header">
+  <div>
+    <h1>Runs</h1>
+    <p class="text-muted">{{ items().length }} {{ plural(items().length, 'run', 'runs') }}</p>
+  </div>
+</header>
+
+<div class="filters">
+  <select class="input" [formControl]="filter" aria-label="Filter by type">
+    <option value="">All types</option>
+    @for (option of typeOptions; track option.value) {
+      <option [value]="option.value">{{ option.label }}</option>
+    }
+  </select>
+</div>
+
+@if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else if (loading() && !items().length) {
+  <p class="text-muted">Loading runs…</p>
+} @else if (!items().length) {
+  <div class="table-wrap"><p class="empty">No runs match the filter.</p></div>
+} @else {
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th class="num">Distance</th>
+          <th class="num">Time</th>
+          <th class="num">Pace</th>
+          <th class="num">RPE</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (run of items(); track run.id) {
+          <tr>
+            <td><a [routerLink]="['/runs', run.id]">{{ run.started_at | date: 'MMM d, y, HH:mm' }}</a></td>
+            <td>{{ types[run.type] }}</td>
+            <td class="num">{{ run.summary ? formatDistance(run.summary.distance_m) : '–' }}</td>
+            <td class="num">{{ run.summary ? formatDuration(run.summary.duration_s) : '–' }}</td>
+            <td class="num">{{ paceLabel(run) }}</td>
+            <td class="num">{{ run.rpe ?? '–' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

@@ -1,0 +1,133 @@
+.page-header:has(.btn) h1::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 14px;
+  vertical-align: 0.14em;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: live-dot 1.6s ease-out infinite;
+}
+
+@keyframes live-dot {
+  0% {
+    box-shadow: 0 0 0 0 rgb(244 63 94 / 55%);
+  }
+
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px rgb(244 63 94 / 0%);
+  }
+}
+
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  margin-bottom: var(--space-5);
+  overflow: hidden;
+  color: var(--color-console-text);
+  background:
+    linear-gradient(rgb(160 164 198 / 5%) 1px, transparent 1px) 0 0 / 100% 12px,
+    var(--color-console-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+
+  > p {
+    grid-column: 1 / -1;
+    padding: var(--space-7) var(--space-5);
+    text-align: center;
+    color: var(--color-console-muted);
+  }
+}
+
+.number {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-5);
+  box-shadow:
+    -1px 0 0 var(--color-console-line),
+    0 -1px 0 var(--color-console-line);
+
+  &:first-child .number-value {
+    color: #ff6f88;
+  }
+
+  &[class*='zone-'] {
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--zone-color) 24%, transparent), transparent 85%);
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: var(--zone-color);
+    }
+
+    .number-value {
+      color: var(--zone-color);
+    }
+  }
+}
+
+.number-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-console-muted);
+}
+
+.number-value {
+  font-size: clamp(2.5rem, 4.6vw, 3.5rem);
+  font-weight: 700;
+  font-stretch: 66%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.chart-card {
+  margin-bottom: var(--space-5);
+}
+
+.chart-wrap {
+  height: 280px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+
+  p {
+    max-width: 44ch;
+    font-size: var(--text-lg);
+    font-weight: 500;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    color: var(--color-primary);
+    border-width: 3px;
+  }
+}
+
+.alerts-card {
+  margin-top: var(--space-5);
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

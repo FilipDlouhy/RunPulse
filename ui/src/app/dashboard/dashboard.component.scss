@@ -1,0 +1,19 @@
+.dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.recent-runs {
+  grid-column: 1 / -1;
+}
+
+.chart-wrap {
+  height: 260px;
+}
+
+@media (max-width: 860px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+}

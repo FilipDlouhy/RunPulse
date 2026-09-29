@@ -1,0 +1,102 @@
+@if (loading()) {
+  <p class="text-muted">Loading…</p>
+} @else if (error()) {
+  <div class="alert alert-danger" role="alert">{{ error() }}</div>
+} @else if (run(); as currentRun) {
+  <header class="page-header">
+    <div>
+      <h1>Live run</h1>
+      <p class="text-muted">{{ currentRun.device }}</p>
+    </div>
+    @if (status() === 'LIVE') {
+      <button type="button" class="btn btn-secondary" [disabled]="stopping()" (click)="stop()">
+        @if (stopping()) {
+          <span class="spinner" aria-hidden="true"></span>
+          Stopping…
+        } @else {
+          Stop run
+        }
+      </button>
+    }
+  </header>
+
+  @if (stopError()) {
+    <div class="alert alert-danger" role="alert">{{ stopError() }}</div>
+  }
+
+  @switch (status()) {
+    @case ('ANALYZING') {
+      <div class="card empty-state">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>Analyzing run…</p>
+      </div>
+    }
+    @case ('DONE') {
+      <div class="card empty-state">
+        <p>Analysis complete. {{ newRecords() }} {{ plural(newRecords(), 'new record', 'new records') }}.</p>
+        <a class="btn btn-primary" [routerLink]="['/runs', currentRun.id]">View run details</a>
+      </div>
+    }
+    @case ('FAILED') {
+      <div class="alert alert-danger" role="alert">Run analysis failed.</div>
+    }
+    @case ('DISCARDED') {
+      <div class="card empty-state">
+        <p>The run was discarded because the treadmill sent no data.</p>
+      </div>
+    }
+    @default {
+      <div class="numbers">
+        @if (metrics(); as m) {
+          <div class="number">
+            <span class="number-label">HR</span>
+            <span class="number-value">{{ m.hr ?? '–' }}</span>
+          </div>
+          <div class="number" [class]="m.zone ? 'zone-' + m.zone : ''">
+            <span class="number-label">Zone</span>
+            <span class="number-value">{{ m.zone ? 'Z' + m.zone : '–' }}</span>
+          </div>
+          <div class="number">
+            <span class="number-label">Pace</span>
+            <span class="number-value">{{ m.pace_s ? formatPace(m.pace_s) : '–' }}</span>
+          </div>
+          <div class="number">
+            <span class="number-label">Distance</span>
+            <span class="number-value">{{ formatDistance(m.distance_m) }}</span>
+          </div>
+          <div class="number">
+            <span class="number-label">Time</span>
+            <span class="number-value">{{ formatDuration(m.elapsed_s) }}</span>
+          </div>
+        } @else {
+          <p class="text-muted">Waiting for first data from treadmill…</p>
+        }
+      </div>
+
+      <div class="card chart-card">
+        <h2 class="card-title">Last 10 minutes</h2>
+        <div class="chart-wrap">
+          <app-chart [config]="chartConfig()" />
+        </div>
+      </div>
+    }
+  }
+
+  @if (alerts().length) {
+    <section class="card alerts-card">
+      <h2 class="card-title">Alerts</h2>
+      <ul class="alert-list">
+        @for (alert of alerts(); track alert.id) {
+          <li class="alert alert-warning">
+            <strong>{{ alertLabels[alert.type] }}</strong>
+            <span>{{ alert.message }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+} @else {
+  <div class="card empty-state">
+    <p>You're not running now. Run a run with the command <code>make run</code>.</p>
+  </div>
+}

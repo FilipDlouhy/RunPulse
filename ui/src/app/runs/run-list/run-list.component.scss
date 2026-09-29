@@ -1,0 +1,14 @@
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+
+  .input {
+    width: auto;
+    min-width: 200px;
+    height: 38px;
+    font-size: var(--text-md);
+    font-weight: 500;
+  }
+}
