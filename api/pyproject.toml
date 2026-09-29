@@ -1,0 +1,38 @@
+[project]
+name = "runpulse-api"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "celery>=5.6.3",
+    "channels>=4.3.2",
+    "channels-redis>=4.3.0",
+    "daphne>=4.2.3",
+    "dj-database-url>=3.1.2",
+    "django>=5.1,<6",
+    "djangorestframework>=3.15",
+    "djangorestframework-simplejwt>=5.3",
+    "faker>=40.39.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "pika>=1.4.4",
+    "psycopg[binary]>=3.2",
+    "redis>=8.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.3.1",
+    "ruff>=0.16.9",
+]
+
+[tool.ruff]
+line-length = 130
+
+[tool.ruff.lint]
+extend-select = ["I"]
+ignore = ["RUF012", "RUF046", "BLE001"]
+
+[tool.mypy]
+ignore_missing_imports = true
+disable_error_code = ["misc", "var-annotated"]
