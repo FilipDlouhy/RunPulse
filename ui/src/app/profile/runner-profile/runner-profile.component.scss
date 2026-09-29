@@ -1,0 +1,13 @@
+.profile-form {
+  max-width: 680px;
+}
+
+.card-title {
+  margin-bottom: 0;
+}
+
+.card-title ~ .card-title {
+  margin-top: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}

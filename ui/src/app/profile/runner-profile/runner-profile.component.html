@@ -1,0 +1,133 @@
+<header class="page-header">
+  <div>
+    <h1>Profile</h1>
+    <p class="text-muted">Heart rate zones are calculated from these values.</p>
+  </div>
+</header>
+
+@if (loading()) {
+  <p class="text-muted">Loading profile…</p>
+} @else {
+  <form class="card form profile-form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+    @if (saved()) {
+      <div class="alert alert-success" role="status">Profile saved.</div>
+    }
+    @if (error()) {
+      <div class="alert alert-danger" role="alert">{{ error() }}</div>
+    }
+
+    <h2 class="card-title">Body</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label" for="profile-weight">Weight</label>
+        <div class="input-group">
+          <input
+            id="profile-weight"
+            class="input"
+            type="number"
+            step="0.1"
+            formControlName="weight_kg"
+            [attr.aria-invalid]="hasError('weight_kg')"
+          />
+          <span class="input-unit">kg</span>
+        </div>
+        @if (hasError('weight_kg')) {
+          <span class="field-error">{{ serverError('weight_kg') ?? 'Between 30 and 250 kg.' }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="profile-birth">Date of birth</label>
+        <input
+          id="profile-birth"
+          class="input"
+          type="date"
+          formControlName="birth_date"
+          [max]="today"
+          [attr.aria-invalid]="hasError('birth_date')"
+        />
+        @if (hasError('birth_date')) {
+          <span class="field-error">{{ serverError('birth_date') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="profile-hr-rest">Resting heart rate</label>
+        <div class="input-group">
+          <input
+            id="profile-hr-rest"
+            class="input"
+            type="number"
+            formControlName="hr_rest"
+            [attr.aria-invalid]="hasError('hr_rest')"
+          />
+          <span class="input-unit">bpm</span>
+        </div>
+        @if (hasError('hr_rest')) {
+          <span class="field-error">{{ serverError('hr_rest') ?? 'Between 30 and 100 bpm.' }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="profile-hr-max">Maximum heart rate</label>
+        <div class="input-group">
+          <input
+            id="profile-hr-max"
+            class="input"
+            type="number"
+            formControlName="hr_max"
+            [attr.aria-invalid]="hasError('hr_max')"
+          />
+          <span class="input-unit">bpm</span>
+        </div>
+        @if (hasError('hr_max')) {
+          <span class="field-error">{{ serverError('hr_max') ?? 'Between 120 and 230 bpm.' }}</span>
+        } @else {
+          <span class="field-hint">Leave empty for estimate 220 − age.</span>
+        }
+      </div>
+    </div>
+
+    <h2 class="card-title">Goal race</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label" for="profile-goal-distance">Distance</label>
+        <select id="profile-goal-distance" class="input" formControlName="goal_distance">
+          <option [ngValue]="null">No goal</option>
+          @for (distance of distances; track distance.value) {
+            <option [ngValue]="distance.value">{{ distance.label }}</option>
+          }
+        </select>
+        @if (hasError('goal_distance')) {
+          <span class="field-error">{{ serverError('goal_distance') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="profile-goal-time">Goal time</label>
+        <input
+          id="profile-goal-time"
+          class="input"
+          type="text"
+          placeholder="h:mm:ss"
+          formControlName="goal_time"
+          [attr.aria-invalid]="hasError('goal_time')"
+        />
+        @if (hasError('goal_time')) {
+          <span class="field-error">{{ serverError('goal_time') ?? 'Use h:mm:ss or mm:ss.' }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving() || form.pristine">
+        @if (saving()) {
+          <span class="spinner" aria-hidden="true"></span>
+          Saving…
+        } @else {
+          Save
+        }
+      </button>
+    </div>
+  </form>
+}
