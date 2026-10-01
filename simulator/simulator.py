@@ -1,3 +1,7 @@
+"""
+Main entry point for treadmill telemetry simulator with modes: single run,
+live gym, backfill, and load test.
+"""
 import argparse
 import os
 import random
@@ -13,11 +17,12 @@ from telemetry import chaos, load_messages, parse_ts, run_end, run_messages
 
 DEFAULT_URL = os.environ.get("RABBITMQ_URL", "amqp://runpulse:runpulse@localhost:5672/%2F")
 DEFAULT_CONFIG = "config.yaml"
-PROGRESS_EVERY_S = 5
-STATUS_EVERY_S = 1
+PROGRESS_EVERY_S = 5                # report sent message rate to stdout
+STATUS_EVERY_S = 1                  # poll device_status queue once per real second
 
 
 def publish_realtime(publisher, messages, start, speedup=1.0, show_minutes=False):
+    """Publish each message at its timestamp, sped up by `speedup`."""
     began = time.monotonic()
     report_at = began + PROGRESS_EVERY_S
     for message in messages:
@@ -36,6 +41,7 @@ def publish_realtime(publisher, messages, start, speedup=1.0, show_minutes=False
 
 
 def simulate_run(args, publisher, rng, config):
+    """Publish a single run's telemetry in real time, optionally with chaos."""
     start = datetime.now(UTC)
     run_uuid = str(uuid.uuid4())
     model = RunnerModel.for_user(args.user, rng=rng)
@@ -54,6 +60,7 @@ def simulate_run(args, publisher, rng, config):
 
 
 def build_gym(publisher, config, rng, heartbeats, start):
+    """Create and return a GymSimulator configured from the loaded config."""
     devices = [f"TREAD-{i:02d}" for i in range(1, config.treadmills + 1)]
     members = gym_members(config.members)
     open_hour, close_hour = parse_open(config.open)
@@ -62,6 +69,7 @@ def build_gym(publisher, config, rng, heartbeats, start):
 
 
 def gym_start(start_arg):
+    """Parse HH:MM local time or use current time, return as UTC."""
     now = datetime.now(GYM_TZ)
     if start_arg:
         hour, minute = start_arg.split(":")
@@ -70,6 +78,7 @@ def gym_start(start_arg):
 
 
 def run_gym(args, publisher, rng, config):
+    """Simulate a gym with member arrivals, runs, and heartbeats."""
     start = gym_start(args.start)
     sim = build_gym(publisher, config, rng, heartbeats=True, start=start)
     print(f"Gym '{config.name}': {len(sim.devices)} treadmills, {len(sim.members)} members, speedup {args.speedup}x")
@@ -78,7 +87,9 @@ def run_gym(args, publisher, rng, config):
     checked_at = time.monotonic()
     try:
         while True:
+            # ---- tick forward one simulated second
             sim.tick()
+            # ---- pull device status updates from backend
             if time.monotonic() - checked_at >= STATUS_EVERY_S:
                 for message in publisher.device_statuses():
                     sim.set_device_status(message["device"], message["status"])
@@ -90,6 +101,7 @@ def run_gym(args, publisher, rng, config):
 
 
 def run_backfill(args, publisher, rng, config):
+    """Simulate past weeks of gym activity as fast as possible, no heartbeats."""
     now = datetime.now(UTC)
     start = (now.astimezone(GYM_TZ) - timedelta(weeks=args.weeks)).replace(hour=0, minute=0, second=0, microsecond=0)
     start = start.astimezone(UTC)
@@ -103,6 +115,7 @@ def run_backfill(args, publisher, rng, config):
 
 
 def run_load(args, publisher, rng, config):
+    """Generate high-volume random telemetry to stress test message consumption."""
     devices = [f"LOAD-{i:03d}" for i in range(1, args.devices + 1)]
     start = datetime.now(UTC)
     messages = load_messages(devices, user="loadbot", rate=args.rate, duration_s=args.duration, start=start, rng=rng)

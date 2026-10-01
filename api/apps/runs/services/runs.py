@@ -1,3 +1,6 @@
+"""
+User-facing run service: list runs, fetch details, update metadata, get live state.
+"""
 from datetime import timedelta
 
 from django.db import transaction
@@ -9,10 +12,11 @@ from apps.runs.live import live_metrics, live_sample
 from apps.runs.models import RunType
 from common.exceptions import ConflictError, NotFoundError
 
-LIVE_HISTORY = timedelta(minutes=10)
+LIVE_HISTORY = timedelta(minutes=10)    # show recent samples in live view
 
 
 class RunService:
+    """List and fetch runs; update metadata; stream live metrics and alerts."""
     def __init__(
         self,
         *,

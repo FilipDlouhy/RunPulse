@@ -8,6 +8,8 @@ from common.permissions import IsGymAdmin
 
 
 class AlertController(ViewSet):
+    """API endpoints for acknowledging alerts."""
+
     permission_classes = [IsGymAdmin]
     lookup_value_regex = r"\d+"
 

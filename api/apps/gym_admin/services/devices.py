@@ -6,6 +6,8 @@ from common.exceptions import ConflictError, NotFoundError
 
 
 class DeviceService:
+    """Treadmill actions of the gym admin."""
+
     def __init__(self, *, device_repository):
         self.device_repository = device_repository
 
@@ -14,6 +16,7 @@ class DeviceService:
 
     @transaction.atomic
     def mark_out_of_order(self, *, device_id):
+        """Take the treadmill out of service, the simulator stops using it."""
         device = self._device_for_update(device_id)
         if device.is_out_of_order:
             raise ConflictError("The treadmill is already out of order.")
@@ -33,6 +36,7 @@ class DeviceService:
         return device
 
     def _send_status_on_commit(self, device):
+        # after commit only, a RabbitMQ outage must not fail the admin action
         transaction.on_commit(lambda: send_device_status(device.serial, device.status), robust=True)
 
     def _device_for_update(self, device_id):

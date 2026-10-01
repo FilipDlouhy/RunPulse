@@ -13,6 +13,7 @@ def zero_if_none(value):
 
 
 class RecordService:
+    """Detect new personal records; list best times; calculate weekly statistics."""
     def __init__(self, *, personal_record_repository, run_repository):
         self.personal_record_repository = personal_record_repository
         self.run_repository = run_repository

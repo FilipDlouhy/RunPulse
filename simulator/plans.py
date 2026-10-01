@@ -1,23 +1,29 @@
+"""
+Run plans: segments with speed, incline, and duration for different workout types.
+"""
 from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class Segment:
+    """A uniform run segment: speed and incline held constant for duration_s seconds."""
     duration_s: int
     speed_kmh: float
     incline: float = 0.0
 
 
 def minutes(count, speed_kmh, incline=0.0):
+    """Create a segment from duration in minutes."""
     return Segment(round(count * 60), speed_kmh, incline)
 
 
-WARM_UP = minutes(10, 8)
-COOL_DOWN = minutes(5, 7)
-INTERVAL_REPEATS = 6
+WARM_UP = minutes(10, 8)               # shared warm-up segment
+COOL_DOWN = minutes(5, 7)              # shared cool-down segment
+INTERVAL_REPEATS = 6                   # number of fast/slow intervals
 
 
 def interval_plan():
+    """Build interval workout: warm-up, fast/slow repeats, cool-down."""
     plan = [WARM_UP]
     for _ in range(INTERVAL_REPEATS):
         plan.append(minutes(3, 14))
@@ -43,4 +49,5 @@ def plan_for(run_type, rng=None):
 
 
 def duration_s(plan):
+    """Total duration of a plan in seconds."""
     return sum(segment.duration_s for segment in plan)

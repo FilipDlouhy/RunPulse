@@ -1,3 +1,6 @@
+"""
+Gym operational statistics: real-time treadmill status, usage heatmaps, and run counts.
+"""
 from datetime import timedelta
 from zoneinfo import ZoneInfo
 
@@ -10,6 +13,8 @@ PRAGUE_TZ = ZoneInfo("Europe/Prague")
 
 
 class GymStatsService:
+    """Collects and aggregates gym equipment usage and alert statistics."""
+
     def __init__(self, *, device_repository, run_repository, usage_hourly_repository, alert_service):
         self.device_repository = device_repository
         self.run_repository = run_repository

@@ -1,3 +1,7 @@
+"""
+Gym simulator: member arrivals, run sessions, heartbeats, and device status
+management.
+"""
 import random
 import uuid
 from dataclasses import dataclass
@@ -11,14 +15,15 @@ from runner_model import RunnerModel
 from telemetry import FIRMWARE, HEARTBEAT_EVERY_S, SURGE_S, chaos, heartbeat, parse_ts, run_messages, surge
 
 GYM_TZ = ZoneInfo("Europe/Prague")
-MEMBER_TRAITS_SEED = 42
-FITNESS_GAIN_PER_WEEK = 0.012
-CHAOS_FRACTION = 0.12
-SURGE_FRACTION = 0.1
-OUT_OF_ORDER = "OUT_OF_ORDER"
+MEMBER_TRAITS_SEED = 42                 # deterministic member generation
+FITNESS_GAIN_PER_WEEK = 0.012           # fitness improves by 1.2% per week for improving members
+CHAOS_FRACTION = 0.12                   # 12% of runs get random errors
+SURGE_FRACTION = 0.1                    # 10% of runs may get a heart rate surge
+OUT_OF_ORDER = "OUT_OF_ORDER"           # status value indicating a broken treadmill
 
 
 def member_traits(index):
+    """Generate deterministic traits for a member based on their index."""
     rng = random.Random(MEMBER_TRAITS_SEED + index)
     age = rng.randint(20, 55)
     hr_rest = rng.randint(48, 68)
@@ -29,6 +34,7 @@ def member_traits(index):
 
 
 class Member:
+    """Gym member with fitness characteristics affecting their run behavior."""
     def __init__(self, username, age, hr_rest, hr_max, weekly_runs, improving):
         self.username = username
         self.age = age
@@ -52,6 +58,7 @@ class Member:
 
 
 def gym_members(count):
+    """Create gym members with deterministic traits plus a known test runner."""
     members = [Member.from_index(index) for index in range(1, count + 1)]
     members.append(Member("runner", None, 52, 188, 4, True))
     return members
@@ -59,6 +66,7 @@ def gym_members(count):
 
 @dataclass
 class Peaks:
+    """Hourly traffic intensity multipliers: 0.0 when closed, 0.2-1.0 when open."""
     open_hour: int
     close_hour: int
     values: dict
@@ -71,10 +79,12 @@ class Peaks:
 
 
 def hour_of(time_text):
+    """Extract hour from HH:MM time string."""
     return int(time_text.split(":")[0])
 
 
 def parse_open(text):
+    """Parse "HH:MM-HH:MM" to (open_hour, close_hour)."""
     start, end = text.split("-")
     return hour_of(start), hour_of(end)
 
@@ -106,6 +116,7 @@ def load_config(path):
 
 
 def sample_gaps(messages):
+    """Find time periods where samples are missing (> 1s apart)."""
     gaps = []
     last_ts = None
     for message in messages:
@@ -119,6 +130,7 @@ def sample_gaps(messages):
 
 
 class RunSession:
+    """A single member's run on a treadmill: yields messages as clock advances."""
     def __init__(self, member, device, messages, gaps):
         self.member = member
         self.device = device
@@ -159,6 +171,7 @@ class RunSession:
 
 
 class GymSimulator:
+    """Simulates a gym: member arrivals weighted by time-of-day, active runs, device status."""
     def __init__(self, publisher, devices, members, peaks, start, rng, heartbeats=True, out_of_order=()):
         self.publisher = publisher
         self.devices = list(devices)
@@ -184,6 +197,7 @@ class GymSimulator:
         return self.clock.astimezone(GYM_TZ).hour
 
     def _try_arrival(self, dt):
+        # ---- check if anyone can arrive
         if not self.free:
             return
         weight = self.peaks.at(self._local_hour())
@@ -193,6 +207,7 @@ class GymSimulator:
         if self.rng.random() >= rate_per_s * dt:
             return
 
+        # ---- pick a free member and device
         pool = [member for member in self.members if member.username not in self.running]
         if not pool:
             return
@@ -200,6 +215,7 @@ class GymSimulator:
         device = self.rng.choice(self.free)
         self.free.remove(device)
 
+        # ---- create and start a run session
         weeks_elapsed = (self.clock - self.sim_start).days // 7
         run_type = member.pick_plan(self.rng)
         plan = plan_for(run_type, self.rng)
@@ -210,6 +226,7 @@ class GymSimulator:
         self.running.add(member.username)
 
     def set_device_status(self, device, status):
+        """Apply a status from the backend: OUT_OF_ORDER removes treadmill and running session."""
         if device not in self.devices:
             return
         if status == OUT_OF_ORDER:
@@ -237,6 +254,7 @@ class GymSimulator:
         self.next_heartbeat = self.clock + timedelta(seconds=HEARTBEAT_EVERY_S)
 
     def tick(self, dt=1.0):
+        """Advance the clock by dt seconds: process arrivals, active runs, and heartbeats."""
         self._try_arrival(dt)
 
         for device, session in list(self.active.items()):

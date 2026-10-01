@@ -1,3 +1,7 @@
+"""
+Celery task to analyze a completed run using the run-analysis pipeline
+with automatic retries and failure handling.
+"""
 import logging
 
 from celery import shared_task
@@ -10,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def retry_countdown(retries):
+    """Map retry attempt count to delay seconds from config."""
     delays = settings.PIPELINE_RETRY_DELAYS
     if retries < len(delays):
         return delays[retries]
@@ -18,6 +23,7 @@ def retry_countdown(retries):
 
 @shared_task(bind=True, max_retries=2)
 def analyze_run(self, run_id):
+    """Analyze a run if it's in the correct state; mark failed on abort or max retries."""
     if not analysis_service.can_analyze(run_id=run_id):
         return
     try:

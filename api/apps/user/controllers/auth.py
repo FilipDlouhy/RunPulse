@@ -13,6 +13,8 @@ from apps.user.services import auth_service, user_service
 
 
 class AuthController(ViewSet):
+    """API endpoints for user registration, login, token refresh, logout, and profile retrieval."""
+
     authentication_classes = []
     permission_classes = [AllowAny]
     throttle_scope = "auth"

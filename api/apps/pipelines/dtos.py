@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 @dataclass(frozen=True)
 class TechOverview:
+    """Tech dashboard data: queue stats, pipeline stats, dead letters, slowest steps."""
     queue: dict | None
     queue_error: str
     dead_letter_count: int

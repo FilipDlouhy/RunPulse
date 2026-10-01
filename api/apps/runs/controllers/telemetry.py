@@ -1,3 +1,7 @@
+"""
+Parse and route treadmill messages: batch samples/heartbeats, start/end runs.
+Rejects invalid or unknown messages to dead-letter.
+"""
 import json
 import logging
 import time
@@ -17,8 +21,8 @@ from common.exceptions import ApplicationError
 
 logger = logging.getLogger(__name__)
 
-BATCH_SIZE = 500
-MAX_WAIT_S = 1.0
+BATCH_SIZE = 500                        # flush when buffer reaches this
+MAX_WAIT_S = 1.0                        # flush if no new message for this long
 
 
 def _error_text(error):
@@ -30,6 +34,7 @@ def _error_text(error):
 
 
 class TelemetryController:
+    """Buffers and validates treadmill telemetry; batch-processes heartbeats and samples."""
     def __init__(self):
         self.buffer = []
         self.buffer_started_at = None
@@ -58,6 +63,7 @@ class TelemetryController:
             self.flush()
 
     def flush(self):
+        """Save heartbeats and samples in batch; reject unknown runs/devices; check alarms."""
         if not self.buffer:
             return
         batch = self.buffer
@@ -168,4 +174,5 @@ class TelemetryController:
         alarm_monitor.forget(message["run_uuid"])
 
     def _reject(self, routing_key, body, error, device=""):
+        """Save invalid message to dead-letter for manual inspection."""
         telemetry_service.dead_letter(routing_key=routing_key, body=body, error=error, device_serial=device)

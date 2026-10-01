@@ -4,15 +4,17 @@ from apps.gym_admin.models import Alert
 from apps.realtime.notify import notify_alert
 from common.exceptions import NotFoundError
 
-ALERT_HISTORY = 50
+ALERT_HISTORY = 50  # max unacknowledged alerts to fetch
 
 
 class AlertService:
+    """Manage device and run alerts, track acknowledgment."""
     def __init__(self, *, alert_repository):
         self.alert_repository = alert_repository
 
     @transaction.atomic
     def raise_alert(self, *, device, alert_type, message, run=None):
+        """Create alert if none with same type exist open, return None if duplicate."""
         if self.alert_repository.get_open(device, run, alert_type) is not None:
             return None
         alert = Alert(device=device, run=run, type=alert_type, message=message[:300])

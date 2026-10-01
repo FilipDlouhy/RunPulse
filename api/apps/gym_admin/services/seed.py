@@ -1,3 +1,6 @@
+"""
+Demo data (users, runner profiles, 30 treadmills) and extra treadmills for the load test.
+"""
 import random
 from datetime import date
 from decimal import Decimal
@@ -38,6 +41,8 @@ def member_traits(index):
 
 
 class SeedService:
+    """Generates demo users, runner profiles, and treadmill devices with realistic data."""
+
     def __init__(self, *, user_repository, runner_profile_repository, device_repository):
         self.user_repository = user_repository
         self.runner_profile_repository = runner_profile_repository

@@ -1,3 +1,7 @@
+"""
+RabbitMQ consumer: reads treadmill data, saves samples in batches,
+runs watchdog on stale runs and offline devices, requeues stuck analyses.
+"""
 import logging
 import time
 
@@ -10,14 +14,15 @@ from apps.runs.services import telemetry_service
 
 logger = logging.getLogger("apps.runs.consume")
 
-PREFETCH = 1000
-REPORT_EVERY_S = 10
-WATCH_EVERY_S = 10
-REQUEUE_EVERY_S = 300
-INACTIVITY_TIMEOUT_S = 0.5
+PREFETCH = 1000                         # max unacked messages from RabbitMQ
+REPORT_EVERY_S = 10                     # log throughput
+WATCH_EVERY_S = 10                      # run watchdog check
+REQUEUE_EVERY_S = 300                   # resend stuck analyses every 5 min
+INACTIVITY_TIMEOUT_S = 0.5              # timeout for polling on queue
 
 
 def declare_topology(channel):
+    """Create exchange, queue, bindings, and status queue."""
     channel.exchange_declare(settings.TELEMETRY_EXCHANGE, exchange_type="topic", durable=True)
     channel.queue_declare(settings.TELEMETRY_QUEUE, durable=True)
     channel.queue_bind(settings.TELEMETRY_QUEUE, settings.TELEMETRY_EXCHANGE, routing_key="#")
@@ -46,6 +51,7 @@ class Command(BaseCommand):
             for method, _properties, body in channel.consume(
                 settings.TELEMETRY_QUEUE, inactivity_timeout=INACTIVITY_TIMEOUT_S
             ):
+                # ---- consume and buffer messages
                 if method is not None:
                     consumer.handle(method.routing_key, body)
                     last_tag = method.delivery_tag
@@ -56,6 +62,7 @@ class Command(BaseCommand):
                     channel.basic_ack(last_tag, multiple=True)
                     last_tag = None
 
+                # ---- watchdog: close stale runs, alert on silent devices
                 if time.monotonic() - watched_at >= WATCH_EVERY_S:
                     consumer.flush()
                     if last_tag is not None:
@@ -66,12 +73,14 @@ class Command(BaseCommand):
                         logger.info("Watchdog: %s", watch_result)
                     watched_at = time.monotonic()
 
+                # ---- requeue: re-enqueue stuck analysis tasks
                 if time.monotonic() - requeued_at >= REQUEUE_EVERY_S:
                     runs = telemetry_service.requeue_stuck_analyses()
                     if runs:
                         logger.info("Requeued %s stuck run analyses.", runs)
                     requeued_at = time.monotonic()
 
+                # ---- reporting: log throughput
                 elapsed = time.monotonic() - report_from
                 if elapsed >= REPORT_EVERY_S:
                     if processed:

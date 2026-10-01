@@ -95,13 +95,15 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
+# JWT stored in httpOnly cookies
 AUTH_COOKIE_ACCESS = "access_token"
 AUTH_COOKIE_REFRESH = "refresh_token"
-AUTH_COOKIE_SECURE = False
+AUTH_COOKIE_SECURE = False             # dev only
 AUTH_COOKIE_SAMESITE = "Lax"
 
 GYM_NAME = os.environ.get("GYM_NAME", "FitPoint Zlín")
 
+# RabbitMQ for device telemetry and async tasks
 RABBITMQ_URL = os.environ.get("RABBITMQ_URL", "amqp://runpulse:runpulse@localhost:5672/%2F")
 TELEMETRY_EXCHANGE = "telemetry"
 TELEMETRY_QUEUE = "telemetry"
@@ -109,6 +111,7 @@ DEVICE_STATUS_QUEUE = "device_status"
 RABBITMQ_MANAGEMENT_URL = os.environ.get("RABBITMQ_MANAGEMENT_URL", "http://localhost:15672/api")
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
+# WebSocket layer for real-time updates
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -116,23 +119,26 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Celery task queue settings
 CELERY_BROKER_URL = RABBITMQ_URL
 CELERY_TASK_IGNORE_RESULT = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_TASK_ACKS_LATE = True
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True            # ack after the task finishes, a crashed worker's task is redelivered
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1   # each worker thread reserves only one task
 
-PIPELINE_RETRY_DELAYS = [2, 10]
-STUCK_TASK_MINUTES = 5
+# Run analysis pipeline
+PIPELINE_RETRY_DELAYS = [2, 10]         # retry delays in seconds
+STUCK_TASK_MINUTES = 5                  # ANALYZING longer than this is sent to Celery again
 
-STALE_RUN_MINUTES = 5
-HR_ALARM_PCT = 95
-HR_ALARM_SECONDS = 60
-NO_DATA_SECONDS = 10
-SERVICE_INTERVAL_HOURS = 500
-DEVICE_OFFLINE_SECONDS = 90
+# Run and device status thresholds
+STALE_RUN_MINUTES = 5                   # live run without data is closed
+HR_ALARM_PCT = 95                       # alert if HR above this % of max
+HR_ALARM_SECONDS = 60                   # alert if HR high for this long
+NO_DATA_SECONDS = 10                    # alert if no telemetry for this long
+SERVICE_INTERVAL_HOURS = 500            # treadmill maintenance interval
+DEVICE_OFFLINE_SECONDS = 90             # no heartbeat for this long -> OFFLINE
 
 LOGGING = {
     "version": 1,

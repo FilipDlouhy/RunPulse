@@ -6,6 +6,7 @@ from common.repositories import BaseRepository
 
 
 class UsageHourlyRepository(BaseRepository[UsageHourly]):
+    """Query treadmill usage aggregated by hour and day of week."""
     model = UsageHourly
 
     def seconds_by_weekday_hour(self, *, since, until, tz):

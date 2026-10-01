@@ -6,6 +6,7 @@ from common.repositories import BaseRepository
 
 
 class SampleRepository(BaseRepository[Sample]):
+    """Fetch and aggregate telemetry samples: distance, heart rate, bucketing."""
     model = Sample
 
     def get_last_of_run(self, run):

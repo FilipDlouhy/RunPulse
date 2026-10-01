@@ -17,6 +17,7 @@ class RunType(models.TextChoices):
 
 
 class Run(models.Model):
+    """Single treadmill workout: tracks telemetry, analysis status, and user effort."""
     class Status(models.TextChoices):
         LIVE = "LIVE", "Live"
         ANALYZING = "ANALYZING", "Analyzing"
@@ -64,6 +65,7 @@ class Run(models.Model):
 
 
 class Sample(models.Model):
+    """Telemetry point from the treadmill: heart rate, speed, incline, timestamp."""
     run = models.ForeignKey(Run, on_delete=models.CASCADE, related_name="samples")
     seq = models.PositiveIntegerField()
     time = models.DateTimeField()
@@ -81,6 +83,7 @@ class Sample(models.Model):
 
 
 class RunSummary(models.Model):
+    """Analysis result: distance, heart rate zones, splits, training impulse."""
     run = models.OneToOneField(Run, on_delete=models.CASCADE, related_name="summary")
     distance_m = models.PositiveIntegerField()
     duration_s = models.PositiveIntegerField()
@@ -115,6 +118,7 @@ RECORD_METERS = {
 
 
 class PersonalRecord(models.Model):
+    """Fastest time for a standard distance (1K, 5K, 10K) set during a run."""
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="records")
     run = models.ForeignKey(Run, on_delete=models.CASCADE, related_name="records")
     distance = models.CharField(max_length=10, choices=RecordDistance.choices)
@@ -139,10 +143,11 @@ class PersonalRecord(models.Model):
 
 
 HEALTH_FIELDS = {"hr"}
-REDACTED_BODY_LENGTH = 500
+REDACTED_BODY_LENGTH = 500              # max chars shown of a body that is not valid JSON
 
 
 class DeadLetter(models.Model):
+    """RabbitMQ message that failed validation or processing."""
     routing_key = models.CharField(max_length=50, blank=True)
     body = models.TextField(blank=True)
     error = models.TextField()

@@ -1,3 +1,6 @@
+"""
+Authenticates requests using JWT from httpOnly cookies with CSRF protection.
+"""
 from django.conf import settings
 from rest_framework import exceptions
 from rest_framework.authentication import CSRFCheck
@@ -5,6 +8,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class CookieJWTAuthentication(JWTAuthentication):
+    """Reads JWT from the access cookie and validates CSRF token."""
 
     def authenticate(self, request):
         raw_token = request.COOKIES.get(settings.AUTH_COOKIE_ACCESS)
@@ -22,6 +26,7 @@ def _empty_response(request):
 
 
 def enforce_csrf(request):
+    """Verify CSRF token from the request, raise PermissionDenied if invalid."""
     check = CSRFCheck(_empty_response)
     check.process_request(request)
     reason = check.process_view(request, None, (), {})

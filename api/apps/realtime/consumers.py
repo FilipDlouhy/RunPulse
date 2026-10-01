@@ -1,11 +1,15 @@
+"""
+WebSocket consumers for real-time live run and gym admin notifications over Channels.
+"""
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from .notify import GYM_GROUP
 
-UNAUTHORIZED_CLOSE_CODE = 4401
+UNAUTHORIZED_CLOSE_CODE = 4401  # custom close code for unauthorized connections
 
 
 class GroupConsumer(AsyncJsonWebsocketConsumer):
+    """Base consumer that adds authenticated users to a group and routes events."""
     group_name = None
 
     def group_for(self, user):
@@ -33,6 +37,7 @@ class GroupConsumer(AsyncJsonWebsocketConsumer):
 
 
 class LiveConsumer(GroupConsumer):
+    """Live run consumer: connects runners to their personal live run events."""
     def group_for(self, user):
         if not user.is_runner:
             return None
@@ -40,6 +45,7 @@ class LiveConsumer(GroupConsumer):
 
 
 class GymConsumer(GroupConsumer):
+    """Gym admin consumer: connects gym admins to device and alert broadcasts."""
     def group_for(self, user):
         if not user.is_gym_admin:
             return None

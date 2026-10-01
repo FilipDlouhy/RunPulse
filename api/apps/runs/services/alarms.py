@@ -1,3 +1,7 @@
+"""
+Watch live runs for alarm conditions: high heart rate, missing HR data, device faults.
+Stream recent samples to WebSocket clients.
+"""
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -11,13 +15,14 @@ from apps.runners.calculations import heart_rate_limits, karvonen_zones
 from apps.runs.live import live_metrics, live_sample
 from apps.runs.models import Run
 
-MAX_MESSAGE_AGE = timedelta(minutes=2)
-CACHE_TTL_S = 60
-SAMPLES_THROTTLE_S = 1.0
+MAX_MESSAGE_AGE = timedelta(minutes=2)  # ignore very old messages
+CACHE_TTL_S = 60                        # reload run and profile every 60s
+SAMPLES_THROTTLE_S = 1.0                # send updates at most every 1s
 
 
 @dataclass
 class RunWatch:
+    """Live run state: current distance, heart rate status, alarm flags."""
     run: Run
     distance_m: float
     hr_max: int = 0
@@ -37,6 +42,7 @@ class RunWatch:
 
 
 class AlarmMonitor:
+    """Monitor live samples for alarms; cache run state and send updates to users."""
     def __init__(
         self,
         *,

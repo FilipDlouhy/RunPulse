@@ -7,6 +7,8 @@ from common.exceptions import NotFoundError, ValidationFailedError
 
 
 class UserService:
+    """User account creation and retrieval, password validation."""
+
     def __init__(self, *, user_repository):
         self.user_repository = user_repository
 

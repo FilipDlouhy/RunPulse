@@ -1,3 +1,7 @@
+"""
+8-step pipeline to analyze a treadmill run: load data, clean outliers, compute distance,
+determine heart rate zones, calculate metrics (TRIMP, kcal), identify records, and persist results.
+"""
 from decimal import ROUND_HALF_UP, Decimal
 
 import numpy as np
@@ -7,11 +11,11 @@ from apps.pipelines.services.pipeline_runner import PipelineAbort
 from apps.runners.calculations import heart_rate_limits, karvonen_zones, zone_of
 from apps.runs.models import RECORD_METERS
 
-DEFAULT_WEIGHT_KG = 70.0
-HR_MIN = 40
-HR_MAX = 230
-MAX_GAP_S = 5
-MIN_LAST_SPLIT_M = 100
+DEFAULT_WEIGHT_KG = 70.0        # fallback if user has no profile
+HR_MIN = 40                      # reject HR samples below this
+HR_MAX = 230                     # reject HR samples above this
+MAX_GAP_S = 5                    # fill gaps up to 5 seconds
+MIN_LAST_SPLIT_M = 100           # final split must be at least 100m
 COLUMNS = ["seq", "hr", "speed", "incline"]
 
 
@@ -112,6 +116,7 @@ def fastest(cumulative, meters):
 
 
 def clean(ctx):
+    """Remove duplicate samples, reject invalid HR, interpolate short gaps in data."""
     samples = ctx["samples"].drop_duplicates("seq")
     last_second = int(samples["seq"].max())
     frame = samples.set_index("seq").reindex(range(last_second + 1))
@@ -136,6 +141,7 @@ def clean(ctx):
 
 
 def distance(ctx):
+    """Compute cumulative distance, total distance, average pace, and splits by kilometer."""
     frame = ctx["frame"]
     meters_per_second = frame["speed"].to_numpy() / 3.6
     cumulative = np.concatenate([[0.0], np.cumsum(meters_per_second)])
@@ -156,6 +162,7 @@ def distance(ctx):
 
 
 def zones(ctx):
+    """Distribute HR samples across 5 Karvonen zones and calculate average/max HR."""
     hr = ctx["frame"]["hr"].dropna().to_numpy()
     bounds = karvonen_zones(ctx["hr_rest"], ctx["hr_max"])
 
@@ -175,6 +182,7 @@ def zones(ctx):
 
 
 def load_metrics(ctx):
+    """Calculate TRIMP (training impulse) and estimated kcal expenditure."""
     trimp = 0
     for zone, seconds in enumerate(ctx["zone_seconds"], start=1):
         trimp += seconds / 60 * zone
@@ -184,6 +192,7 @@ def load_metrics(ctx):
 
 
 def records(ctx):
+    """Find fastest times for configured record distances (1km, 5km, 10km, etc.)."""
     found = {}
     for record_distance, meters in RECORD_METERS.items():
         time_s = fastest(ctx["cumulative"], meters)
@@ -194,11 +203,13 @@ def records(ctx):
 
 
 def machine_usage(ctx):
+    """Convert run duration to decimal hours for treadmill maintenance tracking."""
     ctx["device_hours"] = tenths(ctx["duration_s"] / 3600)
     return ctx
 
 
 class RunAnalysisPipeline:
+    """Orchestrates the 8-step run analysis pipeline from raw telemetry to stored results."""
     name = "run_analysis"
 
     def __init__(
@@ -217,10 +228,12 @@ class RunAnalysisPipeline:
         self.analysis_service = analysis_service
 
     def run(self, run_id):
+        """Execute the full 8-step pipeline for a run."""
         steps = [self.load, clean, distance, zones, load_metrics, records, machine_usage, self.save]
         return self.pipeline_runner.run(self.name, steps, {"run_id": run_id}, run_id=run_id)
 
     def load(self, ctx):
+        """Load run, samples, and user profile; abort if run is live or has no data."""
         run = self.run_repository.get_with_device_and_user(ctx["run_id"])
         if run is None or run.is_live:
             raise PipelineAbort("The run does not exist or is still live.")
@@ -246,6 +259,7 @@ class RunAnalysisPipeline:
         return ctx
 
     def save(self, ctx):
+        """Persist analysis results (summary, records, device hours) to database."""
         self.analysis_service.save_result(
             run_id=ctx["run_id"],
             summary={

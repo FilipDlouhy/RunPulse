@@ -8,6 +8,8 @@ from common.exceptions import AuthenticationError
 
 
 class AuthService:
+    """User registration, login, token refresh, and logout with JWT."""
+
     def __init__(self, *, user_repository, user_service):
         self.user_repository = user_repository
         self.user_service = user_service

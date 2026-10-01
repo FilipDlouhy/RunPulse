@@ -1,3 +1,7 @@
+"""
+Authenticate WebSocket connections using JWT tokens stored in cookies,
+falling back to AnonymousUser if no valid token is found.
+"""
 from http.cookies import SimpleCookie
 
 from channels.db import database_sync_to_async
@@ -10,6 +14,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 
 
 class JwtCookieAuthMiddleware(BaseMiddleware):
+    """Extract JWT from cookies and authenticate the WebSocket connection."""
     async def __call__(self, scope, receive, send):
         scope = dict(scope)
         token = _access_token(scope)
@@ -18,6 +23,7 @@ class JwtCookieAuthMiddleware(BaseMiddleware):
 
 
 def _access_token(scope):
+    """Extract access token from Cookie header; return None if not found."""
     headers = scope.get("headers")
     if headers is None:
         headers = []
@@ -36,6 +42,7 @@ def _access_token(scope):
 
 @database_sync_to_async
 def _authenticate(token):
+    """Validate token and return user; return AnonymousUser if invalid or missing."""
     if not token:
         return AnonymousUser()
     authentication = JWTAuthentication()

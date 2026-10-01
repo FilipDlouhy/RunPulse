@@ -7,6 +7,7 @@ from common.exceptions import NotFoundError
 
 
 class AnalysisService:
+    """Persist analysis results and manage run/record/device state changes."""
     def __init__(self, *, run_repository, run_summary_repository, personal_record_repository, device_repository):
         self.run_repository = run_repository
         self.run_summary_repository = run_summary_repository
@@ -14,10 +15,12 @@ class AnalysisService:
         self.device_repository = device_repository
 
     def can_analyze(self, *, run_id):
+        """Check if the run is in analyzing state and not live."""
         return self.run_repository.get_analyzing_by_id(run_id) is not None
 
     @transaction.atomic
     def save_result(self, *, run_id, summary, records, device_hours):
+        """Save summary, create/replace records, update device hours, notify user of new records."""
         run = self.run_repository.get_by_id_for_update(run_id)
         if run is None or run.is_live:
             raise NotFoundError(f"Run {run_id} cannot be analyzed.")
@@ -66,15 +69,18 @@ class AnalysisService:
         return run
 
     def _add_device_usage(self, device_id, hours):
+        """Record treadmill usage; notify gym if it now needs service."""
         device = self.device_repository.get_by_id_for_update(device_id)
         needed_service = device.needs_service
         device.add_usage(hours)
         self.device_repository.save(device, update_fields=["total_hours", "hours_since_service", "needs_service"])
+        # notify only if service state changed from false to true
         if device.needs_service and not needed_service:
             notify_devices_changed()
 
     @transaction.atomic
     def mark_failed(self, *, run_id):
+        """Mark run as failed and notify user."""
         run = self.run_repository.get_by_id_for_update(run_id)
         if run is None or run.is_live:
             return None

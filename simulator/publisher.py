@@ -1,14 +1,18 @@
+"""
+RabbitMQ publisher for treadmill telemetry, with device status queue polling.
+"""
 import json
 
 import pika
 
-EXCHANGE = "telemetry"
-QUEUE = "telemetry"
-STATUS_QUEUE = "device_status"
+EXCHANGE = "telemetry"                  # RabbitMQ exchange name for telemetry
+QUEUE = "telemetry"                     # queue to publish treadmill data
+STATUS_QUEUE = "device_status"          # queue to read device status commands from backend
 PROPERTIES = pika.BasicProperties(content_type="application/json", delivery_mode=pika.DeliveryMode.Persistent)
 
 
 class Publisher:
+    """Publishes telemetry to RabbitMQ and reads device status updates."""
     def __init__(self, url):
         self.connection = pika.BlockingConnection(pika.URLParameters(url))
         self.channel = self.connection.channel()
@@ -23,6 +27,7 @@ class Publisher:
         self.sent += 1
 
     def device_statuses(self):
+        """Drain and return all pending device status messages from the status queue."""
         statuses = []
         while True:
             method, _properties, body = self.channel.basic_get(STATUS_QUEUE, auto_ack=True)

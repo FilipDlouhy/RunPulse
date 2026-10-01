@@ -8,6 +8,8 @@ from common.exceptions import ValidationFailedError
 
 
 class RunnerProfileService:
+    """Runner profile management: fitness data, zones, race predictions."""
+
     def __init__(self, *, runner_profile_repository):
         self.runner_profile_repository = runner_profile_repository
 

@@ -5,6 +5,8 @@ from .managers import UserManager
 
 
 class User(AbstractUser):
+    """User account with role-based access: runner or gym admin."""
+
     class Role(models.TextChoices):
         RUNNER = "RUNNER", "Runner"
         GYM_ADMIN = "GYM_ADMIN", "Gym admin"

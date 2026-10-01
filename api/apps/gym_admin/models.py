@@ -4,6 +4,8 @@ from django.utils import timezone
 
 
 class Device(models.Model):
+    """Treadmill device in the gym, tracks status, usage, and maintenance."""
+
     class Status(models.TextChoices):
         FREE = "FREE", "Free"
         IN_USE = "IN_USE", "In use"
@@ -36,17 +38,20 @@ class Device(models.Model):
         self.status = self.Status.OUT_OF_ORDER
 
     def add_usage(self, hours):
+        """Track usage, compute maintenance flag based on service interval."""
         self.total_hours += hours
         self.hours_since_service += hours
         self.needs_service = self.hours_since_service >= settings.SERVICE_INTERVAL_HOURS
 
     def mark_service_done(self):
+        """Reset service hours; an out-of-order treadmill goes OFFLINE until its next heartbeat."""
         self.hours_since_service = 0
         self.needs_service = False
         if self.status == self.Status.OUT_OF_ORDER:
             self.status = self.Status.OFFLINE
 
     def see(self, ts):
+        """Update last_seen timestamp, reject older timestamps. Return True if updated."""
         ts = min(ts, timezone.now())
         if self.last_seen is not None and ts < self.last_seen:
             return False
@@ -54,6 +59,7 @@ class Device(models.Model):
         return True
 
     def come_back(self, has_live_run):
+        """Wake from offline: go IN_USE if an active run exists, otherwise FREE."""
         if self.status != self.Status.OFFLINE:
             return
         if has_live_run:
@@ -62,19 +68,24 @@ class Device(models.Model):
             self.status = self.Status.FREE
 
     def start_use(self):
+        """Mark device in use, ignore if out of order."""
         if self.status in (self.Status.FREE, self.Status.OFFLINE):
             self.status = self.Status.IN_USE
 
     def finish_use(self):
+        """Mark device free, ignore if offline or out of order."""
         if self.status == self.Status.IN_USE:
             self.status = self.Status.FREE
 
     def go_offline(self):
+        """Mark device offline, preserve out-of-order status."""
         if self.status != self.Status.OUT_OF_ORDER:
             self.status = self.Status.OFFLINE
 
 
 class Alert(models.Model):
+    """Safety and maintenance alerts during runs or device issues."""
+
     class Type(models.TextChoices):
         HR_HIGH = "HR_HIGH", "Heart rate too high"
         NO_HR = "NO_HR", "No heart rate"
@@ -99,5 +110,6 @@ class Alert(models.Model):
         return self.acknowledged_at is None
 
     def acknowledge(self):
+        """Mark alert as handled by staff, do nothing if already acknowledged."""
         if self.acknowledged_at is None:
             self.acknowledged_at = timezone.now()

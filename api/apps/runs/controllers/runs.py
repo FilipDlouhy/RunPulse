@@ -17,6 +17,7 @@ from common.permissions import IsRunner
 
 
 class RunController(ViewSet):
+    """List and fetch runs; update effort; get live metrics; stop run."""
     permission_classes = [IsRunner]
     lookup_value_regex = r"\d+"
 

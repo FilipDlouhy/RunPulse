@@ -1,7 +1,12 @@
+"""
+Generic repository base for data access, wrapping Django ORM operations.
+"""
 from django.db.models import Model
 
 
 class BaseRepository[T: Model]:
+    """Generic CRUD operations for Django models."""
+
     model: type[T]
 
     def get_by_id(self, pk) -> T | None:

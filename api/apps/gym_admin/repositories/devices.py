@@ -7,6 +7,8 @@ from common.repositories import BaseRepository
 
 
 class DeviceRepository(BaseRepository[Device]):
+    """Data access for treadmill devices."""
+
     model = Device
 
     def get_by_serial(self, serial):
@@ -19,6 +21,7 @@ class DeviceRepository(BaseRepository[Device]):
         return list(self.model.objects.select_for_update().filter(serial__in=serials).order_by("pk"))
 
     def list_silent_since_for_update(self, cutoff):
+        """Get in-use devices that haven't reported status since cutoff."""
         return list(
             self.model.objects.select_for_update()
             .exclude(status=Device.Status.OFFLINE)
@@ -27,10 +30,12 @@ class DeviceRepository(BaseRepository[Device]):
         )
 
     def update_or_create_by_serial(self, serial, fields):
+        """Upsert device by serial, return the device."""
         device, _created = self.model.objects.update_or_create(serial=serial, defaults=fields)
         return device
 
     def see_many(self, last_seen_by_serial):
+        """Bulk update last_seen timestamps using raw SQL for performance."""
         if not last_seen_by_serial:
             return
         now = timezone.now()

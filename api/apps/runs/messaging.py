@@ -1,3 +1,6 @@
+"""
+Publish from the API to RabbitMQ: retried dead letters and treadmill status for the simulator.
+"""
 import json
 
 import pika
@@ -10,6 +13,7 @@ JSON_PROPERTIES = pika.BasicProperties(content_type="application/json", delivery
 
 
 def publish(exchange, routing_key, body, *, unroutable_message):
+    """Send message with mandatory flag; raises if no queue is bound to the routing key."""
     try:
         connection = pika.BlockingConnection(pika.URLParameters(settings.RABBITMQ_URL))
     except AMQPError as error:

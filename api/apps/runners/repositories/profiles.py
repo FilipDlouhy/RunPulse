@@ -3,6 +3,8 @@ from common.repositories import BaseRepository
 
 
 class RunnerProfileRepository(BaseRepository[RunnerProfile]):
+    """Data access for runner profiles."""
+
     model = RunnerProfile
 
     def get_by_user(self, user):

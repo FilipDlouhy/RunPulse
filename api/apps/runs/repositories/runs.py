@@ -7,6 +7,7 @@ from common.repositories import BaseRepository
 
 
 class RunRepository(BaseRepository[Run]):
+    """Queries for live, finished, and analyzing runs; live runs per device/user."""
     model = Run
 
     def get_by_uuid(self, run_uuid):

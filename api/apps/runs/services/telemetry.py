@@ -1,3 +1,7 @@
+"""
+Store and manage treadmill telemetry: start/end runs, save samples, mark stale runs,
+record heartbeats, handle watchdog alerts.
+"""
 from datetime import timedelta
 
 from django.conf import settings
@@ -16,6 +20,7 @@ RUN_DISCARDED = "DISCARDED"
 
 
 class TelemetryService:
+    """Treadmill telemetry and device lifecycle: start/end runs, save samples, watchdog."""
     def __init__(
         self,
         *,
@@ -123,6 +128,7 @@ class TelemetryService:
         self._close(run, ts, from_device=False)
 
     def run_watchdog(self):
+        """Close stale live runs; alert on no data; mark silent treadmills offline."""
         now = timezone.now()
         result = {"ended": 0, "discarded": 0, "faults": 0, "offline": 0}
         for run in self.run_repository.list_live_with_device():

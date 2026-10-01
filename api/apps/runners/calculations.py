@@ -1,9 +1,12 @@
+"""
+Running performance calculations: heart rate zones, predictions based on personal records.
+"""
 from .models import RaceDistance
 
-ZONE_BOUNDS = [(1, 0.5, 0.6), (2, 0.6, 0.7), (3, 0.7, 0.8), (4, 0.8, 0.9), (5, 0.9, 1.0)]
-RIEGEL_EXPONENT = 1.06
-DEFAULT_HR_REST = 60
-DEFAULT_HR_MAX = 190
+ZONE_BOUNDS = [(1, 0.5, 0.6), (2, 0.6, 0.7), (3, 0.7, 0.8), (4, 0.8, 0.9), (5, 0.9, 1.0)]  # Karvonen zones
+RIEGEL_EXPONENT = 1.06                # race time scaling exponent
+DEFAULT_HR_REST = 60                  # default resting heart rate
+DEFAULT_HR_MAX = 190                  # default max heart rate when profile not available
 
 
 def age(birth_date, today):
@@ -17,6 +20,7 @@ def age(birth_date, today):
 
 
 def effective_hr_max(profile, today):
+    """Return (max_bpm, is_estimated). Use measured value if available, else calculate from age."""
     if profile.hr_max:
         return profile.hr_max, False
     if profile.birth_date:
@@ -40,6 +44,7 @@ def heart_rate_limits(profile, today):
 
 
 def karvonen_zones(hr_rest, hr_max):
+    """Calculate 5 training zones using Karvonen formula (percentage of heart rate reserve)."""
     reserve = hr_max - hr_rest
     zones = []
     for zone, low, high in ZONE_BOUNDS:
@@ -54,6 +59,7 @@ def karvonen_zones(hr_rest, hr_max):
 
 
 def zone_of(hr, zones):
+    """Return the highest training zone matching the given heart rate."""
     if hr is None:
         return None
     current = 1
@@ -64,6 +70,7 @@ def zone_of(hr, zones):
 
 
 def riegel(time_s, from_m, to_m):
+    """Predict race time for distance to_m based on known time_s at distance from_m."""
     return time_s * (to_m / from_m) ** RIEGEL_EXPONENT
 
 

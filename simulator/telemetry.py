@@ -1,22 +1,28 @@
+"""
+Telemetry message generation: treadmill samples, run start/end, heartbeats,
+and chaos injection (dropped data, nonsense, duplicates, surges).
+"""
 import uuid
 from datetime import datetime, timedelta
 
-HEARTBEAT_EVERY_S = 30
+HEARTBEAT_EVERY_S = 30                 # how often every treadmill reports it is alive
 FIRMWARE = "3.2.1"
-SURGE_S = 90
-SURGE_PCT = 0.99
+SURGE_S = 90                            # duration of a heart rate surge in seconds
+SURGE_PCT = 0.99                        # surge reaches 99% of max heart rate
 
-HR_OUTAGE_CHANCE = 1 / 900
-DEVICE_OUTAGE_CHANCE = 1 / 1800
-NONSENSE_CHANCE = 0.002
-DUPLICATE_CHANCE = 0.01
+HR_OUTAGE_CHANCE = 1 / 900              # heart rate sensor fails about once per 15 minutes of data
+DEVICE_OUTAGE_CHANCE = 1 / 1800         # treadmill drops out about once per 30 minutes of data
+NONSENSE_CHANCE = 0.002                 # random bad values (wrong HR/speed/missing incline)
+DUPLICATE_CHANCE = 0.01                 # messages occasionally repeated
 
 
 def iso(ts):
+    """Format datetime as ISO 8601 string with Z suffix."""
     return ts.isoformat().replace("+00:00", "Z")
 
 
 def parse_ts(value):
+    """Parse ISO 8601 string to datetime, return None if invalid."""
     try:
         return datetime.fromisoformat(value)
     except (TypeError, ValueError):
@@ -49,6 +55,7 @@ def sample(device, run_uuid, seq, ts, hr, speed_kmh, incline):
 
 
 def run_messages(plan, model, *, device, user, run_type, start, run_uuid=None):
+    """Generate run_start, samples, and run_end messages for a single run."""
     run_uuid = str(run_uuid or uuid.uuid4())
     yield run_start(device, user, run_uuid, run_type, start)
 
@@ -64,6 +71,7 @@ def run_messages(plan, model, *, device, user, run_type, start, run_uuid=None):
 
 
 def load_messages(devices, *, user, rate, duration_s, start, rng):
+    """Generate messages from many devices with random data for stress testing."""
     runs = {device: str(uuid.uuid4()) for device in devices}
     for device, run_uuid in runs.items():
         yield run_start(device, user, run_uuid, "easy", start)
@@ -81,18 +89,21 @@ def load_messages(devices, *, user, rate, duration_s, start, rng):
 
 
 def with_value(message, key, value):
+    """Return a copy of message with one field changed."""
     changed = dict(message)
     changed[key] = value
     return changed
 
 
 def without(message, key):
+    """Return a copy of message with one field removed."""
     changed = dict(message)
     del changed[key]
     return changed
 
 
 def broken(message, rng):
+    """Return a corrupted message: bad HR/speed or missing incline."""
     kind = rng.choice(["hr", "speed", "missing"])
     if kind == "hr":
         return with_value(message, "hr", 999)
@@ -110,6 +121,7 @@ def chaos(
     nonsense_chance=NONSENSE_CHANCE,
     duplicate_chance=DUPLICATE_CHANCE,
 ):
+    """Inject realistic data errors: dropped messages, bad values, duplicates."""
     hr_outage_left = 0
     device_outage_left = 0
     for message in messages:
@@ -140,6 +152,7 @@ def chaos(
 
 
 def surge(messages, *, hr_max, at_s, duration_s=SURGE_S):
+    """Inject a spike to near-max heart rate at a given time in the run."""
     hr = round(hr_max * SURGE_PCT)
     for message in messages:
         if message["type"] == "sample" and at_s <= message["seq"] < at_s + duration_s:

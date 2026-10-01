@@ -1,12 +1,16 @@
+"""
+JWT token storage in httpOnly cookies, CSRF-protected and same-site only.
+"""
 from django.conf import settings
 from django.middleware.csrf import get_token
 from rest_framework_simplejwt.settings import api_settings
 
-ACCESS_COOKIE_PATH = "/"
-REFRESH_COOKIE_PATH = "/api/auth/"
+ACCESS_COOKIE_PATH = "/"             # access token available app-wide
+REFRESH_COOKIE_PATH = "/api/auth/"   # refresh token only at auth endpoint
 
 
 def set_auth_cookies(request, response, access, refresh=None):
+    """Set JWT tokens in httpOnly cookies and generate a CSRF token for the frontend."""
     _set_cookie(
         response,
         settings.AUTH_COOKIE_ACCESS,

@@ -8,6 +8,8 @@ from common.permissions import IsRunner
 
 
 class RunnerProfileController(ViewSet):
+    """API endpoints for runner fitness profile: personal data, heart rate zones, race goals."""
+
     permission_classes = [IsRunner]
 
     @action(detail=False, methods=["get"])

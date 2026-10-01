@@ -8,6 +8,7 @@ from common.permissions import IsRunner
 
 
 class RecordController(ViewSet):
+    """List personal records (best times for 1K, 5K, 10K)."""
     permission_classes = [IsRunner]
 
     def list(self, request):
@@ -16,6 +17,7 @@ class RecordController(ViewSet):
 
 
 class WeeklyStatsController(ViewSet):
+    """Weekly aggregates: runs count, distance, duration, training impulse."""
     permission_classes = [IsRunner]
 
     @action(detail=False, methods=["get"])

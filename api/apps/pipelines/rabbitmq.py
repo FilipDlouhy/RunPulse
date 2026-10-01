@@ -1,13 +1,17 @@
+"""
+Fetch queue statistics from RabbitMQ management API for monitoring telemetry ingestion.
+"""
 from urllib.parse import quote
 
 import httpx
 import pika
 from django.conf import settings
 
-TIMEOUT_S = 2
+TIMEOUT_S = 2  # HTTP request timeout to RabbitMQ management API
 
 
 def fetch_queue_stats():
+    """Query RabbitMQ management API and extract message/consumer rates."""
     params = pika.URLParameters(settings.RABBITMQ_URL)
     url = f"{settings.RABBITMQ_MANAGEMENT_URL}/queues/{quote(params.virtual_host, safe='')}/{settings.TELEMETRY_QUEUE}"
     response = httpx.get(

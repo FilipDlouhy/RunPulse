@@ -13,6 +13,8 @@ from common.permissions import IsGymAdmin
 
 
 class GymController(ViewSet):
+    """API endpoints for gym overview, device status, and usage analytics."""
+
     permission_classes = [IsGymAdmin]
 
     @action(detail=False, methods=["get"])

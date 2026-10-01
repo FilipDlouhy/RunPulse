@@ -9,6 +9,8 @@ from common.permissions import IsGymAdmin
 
 
 class DeviceController(ViewSet):
+    """API endpoints for treadmill maintenance and status changes."""
+
     permission_classes = [IsGymAdmin]
     lookup_value_regex = r"\d+"
 

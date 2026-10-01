@@ -5,6 +5,7 @@ from common.repositories import BaseRepository
 
 
 class PersonalRecordRepository(BaseRepository[PersonalRecord]):
+    """Query personal records by user/run; track best times per distance."""
     model = PersonalRecord
 
     def list_of_run(self, run):

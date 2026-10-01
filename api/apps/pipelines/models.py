@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-ERROR_LENGTH = 2000
+ERROR_LENGTH = 2000  # max length for error message storage
 
 
 class PipelineStatus(models.TextChoices):
@@ -11,6 +11,7 @@ class PipelineStatus(models.TextChoices):
 
 
 class PipelineRun(models.Model):
+    """Records execution of a pipeline (e.g., run analysis) with status and timing."""
     class Name(models.TextChoices):
         RUN_ANALYSIS = "run_analysis", "Run analysis"
 
@@ -45,6 +46,7 @@ class PipelineRun(models.Model):
 
 
 class PipelineStep(models.Model):
+    """Records a single step's status and timing within a pipeline run."""
     pipeline_run = models.ForeignKey(PipelineRun, on_delete=models.CASCADE, related_name="steps")
     order = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=50)
